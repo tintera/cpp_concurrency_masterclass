@@ -3,7 +3,6 @@
 #include <thread>
 #include <atomic>
 #include <vector>
-#include <iostream>
 #include <future>
 #include <numeric>
 #include <list>
@@ -39,14 +38,13 @@ class thread_pool_waiting_other_tasks {
 public:
 	thread_pool_waiting_other_tasks() :done(false), joiner(threads)
 	{
-		int const thread_count = std::thread::hardware_concurrency();
+		unsigned const thread_count = std::thread::hardware_concurrency();
 
 		try
 		{
-			for (int i = 0; i < thread_count; ++i)
+			for (unsigned i = 0; i < thread_count; ++i)
 			{
-				threads.push_back(
-					std::thread(&thread_pool_waiting_other_tasks::worker_thread, this));
+				threads.emplace_back(&thread_pool_waiting_other_tasks::worker_thread, this);
 			}
 		}
 		catch (...)
@@ -62,10 +60,10 @@ public:
 	}
 
 	template<typename FunctionType>
-	std::future<typename std::result_of<FunctionType()>::type>
+	std::future<std::result_of_t<FunctionType()>>
 		submit(FunctionType f)
 	{
-		typedef typename std::result_of<FunctionType()>::type result_type;
+		typedef std::result_of_t<FunctionType()> result_type;
 
 		std::packaged_task<result_type()> task(std::move(f));
 		std::future<result_type> res(task.get_future());
@@ -102,7 +100,7 @@ struct sorter {
 		result.splice(result.begin(), chunk_data, chunk_data.begin());
 		T const& partition_val = *result.begin();
 
-		typename std::list<T>::iterator divide_point = std::partition(chunk_data.begin(),
+		typename std::list<T>::iterator divide_point = std::partition(chunk_data.begin(),  // NOLINT(modernize-use-auto)
 			chunk_data.end(), [&](T const& val)
 		{
 			return val < partition_val;
@@ -113,7 +111,7 @@ struct sorter {
 			chunk_data.begin(), divide_point);
 
 		std::future<std::list<T>> new_lower =
-			pool.submit(std::bind(&sorter::do_sort, this, std::move(new_lower_chunk)));
+			pool.submit(std::bind(&sorter::do_sort, this, std::move(new_lower_chunk)));  // NOLINT(modernize-avoid-bind) // can not move to lambda
 
 		std::list<T> new_higher(do_sort(chunk_data));
 

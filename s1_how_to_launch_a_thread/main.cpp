@@ -9,7 +9,7 @@ void func1()
 class my_class {
 
 public:
-	void operator()()
+	void operator()() const
 	{
 		std::cout << "hello from the class with function call operator \n";
 	}
@@ -17,7 +17,7 @@ public:
 
 int main()
 {
-	//create thread using fuction
+	//create thread using function
 	std::thread thread1(func1);
 
 	//create thread using class with function call operator

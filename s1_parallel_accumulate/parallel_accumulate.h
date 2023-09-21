@@ -15,27 +15,27 @@ void accumulate(iterator first, iterator last, T& val)
 template<typename iterator, typename T>
 void parallel_accumulate(iterator start, iterator end, T& ref)
 {
-	unsigned MIN_BLOCK_SIZE = 1000;
+	constexpr unsigned MIN_BLOCK_SIZE = 1'000;
 
-	unsigned distance = std::distance(start, end);
-	unsigned allowed_threads_by_elements = (distance + 1) / MIN_BLOCK_SIZE;
-	unsigned allowed_threads_by_hardware = std::thread::hardware_concurrency();
+	const size_t distance = std::distance(start, end);
+	const size_t allowed_threads_by_elements = (distance + 1) / MIN_BLOCK_SIZE;
+	size_t allowed_threads_by_hardware = std::thread::hardware_concurrency();
 
 	// this is due to the fact that some operating system may 
 	// return 0 to indicate that this has not implemented
 	if (allowed_threads_by_hardware < 1)
 		allowed_threads_by_hardware = 2;
 
-	unsigned allowed_threads = std::min(allowed_threads_by_elements,
+	size_t allowed_threads = std::min(allowed_threads_by_elements,
 		allowed_threads_by_hardware);
 
 	//caculating the block size 
-	unsigned block_size = (distance + 1) / allowed_threads;
+	size_t block_size = (distance + 1) / allowed_threads;
 
 	std::vector<T> results(allowed_threads);
 	std::vector<std::thread> threads(allowed_threads - 1);
 
-	//iterate and craeting new threads to calculate sum for each blocks
+	//iterate and creating new threads to calculate sum for each blocks
 	iterator last;
 	for (unsigned i = 0; i < allowed_threads - 1; i++)
 	{
@@ -50,7 +50,7 @@ void parallel_accumulate(iterator start, iterator end, T& ref)
 	results[allowed_threads - 1] =
 		std::accumulate(start, end, results[allowed_threads - 1]);
 
-	//calling join on the newly craeted threads
+	//calling join on the newly created threads
 	for_each(threads.begin(), threads.end(), std::mem_fn(&std::thread::join));
 	ref = std::accumulate(results.begin(), results.end(), ref);
 }

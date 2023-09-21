@@ -2,7 +2,7 @@
 #include <future>
 #include <numeric>
 
-#include "common_objs.h"
+#include "../common/common_objs.h"
 
 
 template<typename Iterator>
@@ -50,22 +50,22 @@ void parallel_partial_sum(Iterator first, Iterator last)
                 }
                 else
                 {
-                    //final block - main therad is the one process the final block
+                    //final block - main thread is the one process the final block
                     throw;
                 }
             }
         }
     };
-    unsigned long const length = std::distance(first, last);
+    size_t const length = std::distance(first, last);
     
     if (!length)
         return;
-   
-    unsigned long const min_per_thread      = 25;
-    unsigned long const max_threads         = (length + min_per_thread - 1) / min_per_thread;
-    unsigned long const hardware_threads    = std::thread::hardware_concurrency();
-    unsigned long const num_threads         = std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);
-    unsigned long const block_size          = length / num_threads;
+
+    constexpr size_t min_per_thread      = 25;
+    size_t const max_threads         = (length + min_per_thread - 1) / min_per_thread;
+    size_t const hardware_threads    = std::thread::hardware_concurrency();
+    size_t const num_threads         = std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);
+    size_t const block_size          = length / num_threads;
     
     
     //typedef typename Iterator::value_type value_type;
@@ -92,7 +92,7 @@ void parallel_partial_sum(Iterator first, Iterator last)
    
     Iterator final_element = block_start;
     std::advance(final_element, std::distance(block_start, last) - 1);
-    process_chunk()(block_start, final_element,(num_threads > 1) ? &previous_end_values.back() : 0, 0);
+    process_chunk()(block_start, final_element,(num_threads > 1) ? &previous_end_values.back() : 0, nullptr);
 }
 
 struct barrier
@@ -180,7 +180,7 @@ void parallel_partial_sum_barrier(Iterator first, Iterator last)
 
 
 template<typename Iterator, typename OutIterator >
-void sequentail_partial_sum(Iterator first, Iterator last, OutIterator y)
+void sequential_partial_sum(Iterator first, Iterator last, OutIterator y)
 {
 	unsigned long const length = std::distance(first, last);
 	

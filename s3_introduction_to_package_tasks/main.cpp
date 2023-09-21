@@ -1,8 +1,6 @@
 #include <iostream>
 #include <future>
-#include <numeric>
 #include <thread>
-#include <functional>
 
 int add(int x, int y)
 {

@@ -1,19 +1,16 @@
 #include <iostream>
-#include <thread>
 #include <future>
 #include <chrono>
-#include <execution>
 #include <string>
 
-const size_t testSize = 1000;
+constexpr int testSize = 1000;
 
-using std::chrono::duration;
-using std::chrono::duration_cast;
 using std::chrono::high_resolution_clock;
 using std::milli;
 
 void function3()
-{
+{   // NOLINT(clang-diagnostic-missing-noreturn)
+	// with [[ noreturn ]] we would have unreachable code warning in the function1
 	throw;
 }
 
@@ -24,10 +21,10 @@ std::string function1(int i)
 
 	if (i < 100)
 	{
-		return std::string("Hello");
+		return "Hello";
 	}
 
-	return std::string("Hi");
+	return "Hi";
 }
 
 
@@ -50,7 +47,8 @@ int init_number(int i)
 
 	if (i < 1000)
 	{
-		i = i;
+		// ReSharper disable once CppIdenticalOperandsInBinaryExpression
+		i = i;  // NOLINT(clang-diagnostic-self-assign) // intentional
 	}
 	else
 	{
@@ -64,7 +62,7 @@ int main()
 {
 
 	std::vector<int> ints(testSize);
-	for (size_t i = 0; i < testSize; i++)
+	for (int i = 0; i < testSize; i++)
 	{
 		ints[i] = init_number(i);
 		std::cout << init_number(i) << " " << function1(i) << " " << function2(i);

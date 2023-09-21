@@ -1,6 +1,4 @@
 #include <iostream>
-#include <thread>
-#include <stdexcept>
 
 #include "parallel_accumulate.h"
 

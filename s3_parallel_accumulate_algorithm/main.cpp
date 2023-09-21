@@ -2,14 +2,14 @@
 #include <future>
 #include <numeric>
 
-int MIN_ELEMENT_COUNT = 1000;
+constexpr size_t MIN_ELEMENT_COUNT = 1'000;
 
 template<typename iterator>
-int parallal_accumulate(iterator begin, iterator end)
+int parallel_accumulate(iterator begin, iterator end)
 {
-	long length = std::distance(begin, end);
+	const size_t length = std::distance(begin, end);
 
-	//atleast runs 1000 element
+	//at least runs 1000 element
 	if (length <= MIN_ELEMENT_COUNT)
 	{
 		std::cout << std::this_thread::get_id() << std::endl;
@@ -21,13 +21,13 @@ int parallal_accumulate(iterator begin, iterator end)
 
 	//recursive all to parallel_accumulate
 	std::future<int> f1 = std::async(std::launch::deferred | std::launch::async,
-		parallal_accumulate<iterator>, mid, end);
-	auto sum = parallal_accumulate(begin, mid);
+		parallel_accumulate<iterator>, mid, end);
+	auto sum = parallel_accumulate(begin, mid);
 	return sum + f1.get();
 }
 
 int main()
 {
 	std::vector<int> v(10000, 1);
-	std::cout << "The sum is " << parallal_accumulate(v.begin(), v.end()) << '\n';
+	std::cout << "The sum is " << parallel_accumulate(v.begin(), v.end()) << '\n';
 }

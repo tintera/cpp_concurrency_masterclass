@@ -67,15 +67,15 @@
 //
 
 
-#include <experimental/coroutine>
-#include <memory>
+// ReSharper disable CppMemberFunctionMayBeStatic
+#include <coroutine>
 #include <iostream>
 
 template<typename T>
 struct Generator {
 
     struct promise_type;
-    using handle_type = experimental::coroutine_handle<promise_type>;
+    using handle_type = std::coroutine_handle<promise_type>;
 
     Generator(handle_type h) : coro(h) {}                         // (3)
     handle_type coro;
@@ -101,29 +101,33 @@ struct Generator {
         return not coro.done();
     }
     struct promise_type {
-        promise_type() = default;                               // (1)
+	    promise_type(const promise_type& other) = default;
+	    promise_type(promise_type&& other) noexcept = default;
+	    promise_type& operator=(const promise_type& other) = default;
+	    promise_type& operator=(promise_type&& other) noexcept = default;
+	    promise_type() = default;                               // (1)
 
         ~promise_type() = default;
 
         auto initial_suspend() {                                 // (4)
-            return experimental::suspend_always();
+            return std::suspend_always();
         }
         auto  final_suspend() noexcept {
-            return experimental::suspend_always();
+            return std::suspend_always();
         }
         auto get_return_object() {                               // (2)
-            return Generator{ experimental::handle_type::from_promise(*this) };
+            return Generator{ handle_type::from_promise(*this) };
         }
         void return_void() {
-            experimental::suspend_never();
+            std::suspend_never();
         }
 
         auto yield_value(const T value) {                        // (6) 
             current_value = value;
-            return experimental::suspend_always{};
+            return std::suspend_always{};
         }
         void unhandled_exception() {
-            std::exit(1);
+            std::exit(1);  // NOLINT(concurrency-mt-unsafe)
         }
         T current_value;
     };

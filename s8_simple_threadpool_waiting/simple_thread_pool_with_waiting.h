@@ -3,7 +3,6 @@
 #include <thread>
 #include <atomic>
 #include <vector>
-#include <iostream>
 #include <future>
 #include <numeric>
 #include "common_thread_safe_queue.h"
@@ -37,14 +36,13 @@ class thread_pool_waiting {
 public:
 	thread_pool_waiting() :done(false), joiner(threads)
 	{
-		int const thread_count = std::thread::hardware_concurrency();
+		unsigned const thread_count = std::thread::hardware_concurrency();
 
 		try
 		{
-			for (int i = 0; i < thread_count; ++i)
+			for (unsigned i = 0; i < thread_count; ++i)
 			{
-				threads.push_back(
-					std::thread(&thread_pool_waiting::worker_thread, this));
+				threads.emplace_back(&thread_pool_waiting::worker_thread, this);
 			}
 		}
 		catch (...)
@@ -60,10 +58,10 @@ public:
 	}
 
 	template<typename FunctionType>
-	std::future<typename std::result_of<FunctionType()>::type>
+	std::future<std::result_of_t<FunctionType()>>
 		submit(FunctionType f)
 	{
-		typedef typename std::result_of<FunctionType()>::type result_type;
+		typedef std::result_of_t<FunctionType()> result_type;
 		std::packaged_task<result_type()> task(std::move(f));
 		std::future<result_type> res(task.get_future());
 		work_queue.push(std::move(task));
@@ -77,7 +75,9 @@ struct accumulate_block
 	T operator()(Iterator first, Iterator last)
 	{
 		T value = std::accumulate(first, last, T());
-		printf(" %d - %d  \n", std::this_thread::get_id(), value);
+#pragma warning(disable: 4477)
+		// ReSharper disable CppPrintfBadFormat
+		printf(" %d - %d  \n", std::this_thread::get_id(), value);  // NOLINT(clang-diagnostic-format)
 		return value;
 	}
 };
@@ -85,23 +85,23 @@ struct accumulate_block
 template<typename Iterator, typename T>
 T parallel_accumulate(Iterator first, Iterator last, T init)
 {
-	unsigned long const length = std::distance(first, last);
+	size_t const length = std::distance(first, last);
 	thread_pool_waiting pool;
 
 	if (!length)
 		return init;
 
-	unsigned long const min_per_thread = 25;
-	unsigned long const max_threads =
+	size_t constexpr min_per_thread = 25;
+	size_t const max_threads =
 		(length + min_per_thread - 1) / min_per_thread;
 
-	unsigned long const hardware_threads =
+	size_t const hardware_threads =
 		std::thread::hardware_concurrency();
 
-	unsigned long const num_threads =
+	size_t const num_threads =
 		std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);
 
-	unsigned long const block_size = length / num_threads;
+	size_t const block_size = length / num_threads;
 
 	std::vector<std::future<T> > futures(num_threads - 1);
 
@@ -110,7 +110,10 @@ T parallel_accumulate(Iterator first, Iterator last, T init)
 	{
 		Iterator block_end = block_start;
 		std::advance(block_end, block_size);
-		futures[i] = pool.submit(std::bind(accumulate_block<Iterator, T>(), block_start, block_end));
+		futures[i] = pool.submit([block_start, block_end]
+		{
+			return accumulate_block<Iterator, T>()(block_start, block_end);
+		});
 		block_start = block_end;
 	}
 	T last_result = accumulate_block<int*, int>()(block_start, last);

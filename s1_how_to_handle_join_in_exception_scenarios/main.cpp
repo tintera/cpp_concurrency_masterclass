@@ -2,7 +2,7 @@
 #include <thread>
 #include <stdexcept>
 #include <chrono>
-#include "common_objs.h"
+#include "../common/common_objs.h"
 
 void func_1()
 {
@@ -11,7 +11,7 @@ void func_1()
 }
 
 void other_operations()
-{
+{  // NOLINT(clang-diagnostic-missing-noreturn) // would create unreachable code warning
 	std::cout << "This is other operation \n";
 	throw std::runtime_error("this is a runtime error");
 }

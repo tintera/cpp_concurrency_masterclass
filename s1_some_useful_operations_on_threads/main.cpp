@@ -22,9 +22,9 @@ void run_code2()
 	std::cout << "thread_1 id before joining : " << thread_1.get_id() << std::endl;
 	thread_1.join();
 
-	std::thread thread_2;
+	const std::thread thread_2;
 
-	std::cout << "default consturcted thread id : " << thread_2.get_id() << std::endl;
+	std::cout << "default constructed thread id : " << thread_2.get_id() << std::endl;
 	std::cout << "thread_1 id after joining : " << thread_1.get_id() << std::endl;
 	std::cout << "Main thread id : " << std::this_thread::get_id() << std::endl;
 

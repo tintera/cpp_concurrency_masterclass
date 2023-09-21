@@ -6,7 +6,7 @@
 
 using namespace std;
 
-void SieveOfEratosthenes(const unsigned int num) 
+void SieveOfEratosthenes(const int num) 
 {
     const unsigned int array_size = num + 1;
     bool* pno = new bool[array_size];
@@ -34,7 +34,7 @@ void SieveOfEratosthenes(const unsigned int num)
 
 int main()
 {
-    int num = 15;
+	constexpr int num = 15;
     cout << "The prime numbers smaller or equal to " << num << " are: ";
     SieveOfEratosthenes(num);
     return 0;

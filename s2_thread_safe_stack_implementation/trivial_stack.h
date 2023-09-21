@@ -1,8 +1,6 @@
 #pragma once
-#include <iostream>
 #include <mutex>
 #include <stack>
-#include <thread>
 
 template<typename T>
 class trivial_thread_safe_stack {

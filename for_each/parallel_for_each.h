@@ -7,23 +7,23 @@
 #include "common_objs.h"
 
 
-/* This is the parallel version of for_each function implmentation with package tasks and futures */
+/* This is the parallel version of for_each function implementation with package tasks and futures */
 template<typename Iterator, typename Func>
 void parallel_for_each_pt( Iterator first, Iterator last, Func f )
 {
-	unsigned long const length = std::distance(first, last);
+	size_t const length = std::distance(first, last);
 
 	if (!length)
 		return;
 
 	/*	Calculate the optimized number of threads to run the algorithm	*/
-	
-	unsigned long const min_per_thread = 25;
-	unsigned long const max_threads = (length + min_per_thread - 1) / min_per_thread;
 
-	unsigned long const hardware_threads = std::thread::hardware_concurrency();
-	unsigned long const num_threads = std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);
-	unsigned long const block_size = length / num_threads;
+	constexpr size_t min_per_thread = 25;
+	size_t const max_threads = (length + min_per_thread - 1) / min_per_thread;
+
+	size_t const hardware_threads = std::thread::hardware_concurrency();
+	size_t const num_threads = std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);
+	size_t const block_size = length / num_threads;
 
 	/*	Declare the needed data structures	*/
 	
@@ -39,7 +39,7 @@ void parallel_for_each_pt( Iterator first, Iterator last, Func f )
 		Iterator block_end = block_start;
 		std::advance(block_end, block_size);
 		
-		std::packaged_task<void(void)> task(
+		std::packaged_task<void()> task(
 			[=]()
 			{
 				std::for_each(block_start, block_end, f);
@@ -61,18 +61,16 @@ void parallel_for_each_pt( Iterator first, Iterator last, Func f )
 
 }
 
-/* This is the parallel version of for_each function implmentation with std::async */
+/* This is the parallel version of for_each function implementation with std::async */
 template<typename Iterator, typename Func>
 void parallel_for_each_async(Iterator first, Iterator last, Func f)
 {
-	unsigned long const length = std::distance(first,last);
+	size_t const length = std::distance(first,last);
 	
 	if (!length)
 		return;
 
-	unsigned long const min_per_thread = 25;
-
-	if (length < 2 * min_per_thread)
+	if (constexpr size_t min_per_thread = 25; length < 2 * min_per_thread)
 	{
 		std::for_each(first, last, f);
 	}

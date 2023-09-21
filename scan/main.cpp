@@ -1,19 +1,13 @@
-#include <iostream>
 #include <chrono>
-#include <functional>
-#include <iostream>
-#include <iterator>
 #include <numeric>
 #include <vector>
 #include <execution>
 
 #include "partial_sum.h"
-#include "utils.h"
+#include "../common/utils.h"
 
-const size_t testSize = 1'000;
+constexpr size_t testSize = 1'000;
 
-using std::chrono::duration;
-using std::chrono::duration_cast;
 using std::chrono::high_resolution_clock;
 using std::milli;
 

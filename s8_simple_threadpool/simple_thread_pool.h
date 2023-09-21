@@ -3,12 +3,10 @@
 #include <thread>
 #include <atomic>
 #include <vector>
-#include <iostream>
 #include <functional>
 #include "common_thread_safe_queue.h"
 #include "common_objs.h"
 
-#include "utils.h"
 
 class thread_pool
 {
@@ -36,14 +34,13 @@ class thread_pool
 public:
 	thread_pool() :done(false), joiner(threads)
 	{
-		int const thread_count = std::thread::hardware_concurrency();
+		unsigned const thread_count = std::thread::hardware_concurrency();
 
 		try
 		{
-			for (int i = 0; i < thread_count; i++)
+			for (unsigned i = 0; i < thread_count; i++)
 			{
-				threads.push_back(
-					std::thread(&thread_pool::worker_thread, this));
+				threads.emplace_back(&thread_pool::worker_thread, this);
 			}
 		}
 		catch (...)

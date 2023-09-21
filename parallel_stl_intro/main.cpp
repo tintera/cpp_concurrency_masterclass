@@ -1,5 +1,4 @@
-#include <stddef.h>
-#include <stdio.h>
+#include <cstdio>
 #include <algorithm>
 #include <random>
 #include <ratio>
@@ -15,8 +14,8 @@ using std::random_device;
 using std::sort;
 using std::vector;
 
-const size_t testSize = 1'000'000;
-const int iterationCount = 5;
+constexpr size_t testSize = 1'000'000;
+constexpr int iterationCount = 5;
 
 void print_results(const char* const tag, const vector<double>& sorted,
     high_resolution_clock::time_point startTime,

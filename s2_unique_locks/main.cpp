@@ -3,34 +3,37 @@
 #include <thread>
 #include <string>
 
+using namespace std::string_literals;
+
 
 /***************************************************Example 1 ******************************************/
-class bank_account {
+class bank_account {  // NOLINT(cppcoreguidelines-special-member-functions)
 	double balance;
 	std::string name;
 	std::mutex m;
 
 public:
-	bank_account() {};
+	bank_account() = default;
 
-	bank_account(double _balance, std::string _name) :balance(_balance), name(_name) {}
+	bank_account(const double _balance, std::string _name) :balance(_balance), name(std::move(_name)) {}
 
-	bank_account(bank_account& const) = delete;
-	bank_account& operator=(bank_account& const) = delete;
+	bank_account(bank_account& ) = delete;
+	bank_account& operator=(bank_account& ) = delete;
 
-	void withdraw(double amount)
+	void withdraw(const double amount)
 	{
 		std::lock_guard<std::mutex> lg(m);
 		balance += amount;
 	}
 
-	void deposite(double amount)
+	void deposit(const double amount)
 	{
 		std::lock_guard<std::mutex> lg(m);
 		balance += amount;
 	}
 
-	void transfer(bank_account& from, bank_account& to, double amount)
+	// ReSharper disable once CppMemberFunctionMayBeStatic // static function can not be run in a thread
+	void transfer(bank_account& from, bank_account& to, const double amount)
 	{
 
 		std::cout << std::this_thread::get_id() << " hold the lock for both mutex \n";
@@ -50,8 +53,8 @@ void run_code1()
 
 	bank_account account;
 
-	bank_account account_1(1000, "james");
-	bank_account account_2(2000, "Mathew");
+	bank_account account_1(1000, "James"s);
+	bank_account account_2(2000, "Mathew"s);
 
 	std::thread thread_1(&bank_account::transfer, &account, std::ref(account_1), std::ref(account_2), 500);
 	std::thread thread_2(&bank_account::transfer, &account, std::ref(account_2), std::ref(account_1), 200);

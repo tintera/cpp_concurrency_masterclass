@@ -6,7 +6,7 @@
 #include <condition_variable>
 #include <thread>
 
-/********************* Frist version of thread safe queue  ***********************/
+/********************* First version of thread safe queue  ***********************/
 template<typename T>
 class sequential_queue1 {
 
@@ -21,7 +21,7 @@ class sequential_queue1 {
 	};
 
 	std::unique_ptr<node> head;
-	node* tail;
+	node* tail{};
 
 	public:
 	void push(T value)
@@ -69,7 +69,7 @@ class sequential_queue2 {
 	};
 
 	std::unique_ptr<node> head;
-	node* tail;
+	node* tail{};
 	std::mutex head_mutex;
 	std::mutex tail_mutex;
 
@@ -107,7 +107,7 @@ class sequential_queue2 {
 };
 
 
-/********************* thrid version of thread safe queue  ***********************/
+/********************* Third version of thread safe queue  ***********************/
 template<typename T>
 class sequential_queue3 {
 
@@ -179,7 +179,7 @@ class sequential_queue4 {
 
 	node* get_tail()
 	{
-		std::lock_guard<std::mutex>(tail_mutex);
+		std::lock_guard<std::mutex>{tail_mutex};
 		return tail;
 	}
 
@@ -249,8 +249,7 @@ class sequential_queue5 {
 		std::shared_ptr<T> data;
 		std::unique_ptr<node> next;
 
-		node()
-		{}
+		node() = default;
 
 		node(T _data) : data(std::move(_data))
 		{
@@ -263,7 +262,7 @@ class sequential_queue5 {
 	std::mutex head_mutex;
 	std::mutex tail_mutex;
 
-	std::condition_variable cv;
+	std::condition_variable head_condition;
 
 	node* get_tail()
 	{
@@ -276,7 +275,7 @@ class sequential_queue5 {
 		//? protect head node with mutex and unique_lock
 		std::unique_lock<std::mutex> lock(head_mutex);
 
-		//? Need to wait for the condion variable
+		//? Need to wait for the condition variable
 		//* (maybe someone pushing to the queue at the moment)
 		//? and also check if there is something in the queue
 		//* (head.get() == get_tail()) - when head and tail points to the dummy node
@@ -308,7 +307,7 @@ class sequential_queue5 {
 			tail = new_tail;
 		}
 
-		cv.notify_one();
+		head_condition.notify_one();
 	}
 
 	std::shared_ptr<T> pop()
@@ -318,7 +317,7 @@ class sequential_queue5 {
 		{
 			return std::shared_ptr<T>();
 		}
-		std::shared_ptr<T> const res(head->data);
+		std::shared_ptr<T> res(head->data);
 		std::unique_ptr<node> const old_head = std::move(head);
 		head = std::move(old_head->next);
 		return res;

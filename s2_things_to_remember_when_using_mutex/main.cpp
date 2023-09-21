@@ -1,7 +1,6 @@
 #include <iostream>
 #include <mutex>
 #include <list>
-#include <thread>
 
 /*********************** example 1 *********************/
 class list_wrapper {
@@ -18,7 +17,7 @@ public:
 	void size()
 	{
 		std::lock_guard<std::mutex> lg(m);
-		int size = my_list.size();
+		const size_t size = my_list.size();
 		std::cout << "size of the list is : " << size << std::endl;
 	}
 
@@ -32,6 +31,7 @@ public:
 class data_object {
 
 public:
+	// ReSharper disable once CppMemberFunctionMayBeStatic
 	void some_operation()
 	{
 		std::cout << "this is some operation \n";
@@ -54,7 +54,7 @@ public:
 
 data_object* unprotected_data;
 
-void malisious_function(data_object& data)
+void malicious_function(data_object& data)
 {
 	unprotected_data = &data;
 }
@@ -62,7 +62,7 @@ void malisious_function(data_object& data)
 void run_code()
 {
 	data_wrapper wrapper;
-	wrapper.do_some_work(malisious_function);
+	wrapper.do_some_work(malicious_function);
 }
 
 

@@ -5,10 +5,8 @@
 #include "parallel_for_each.h"
 #include "utils.h"
 
-const size_t testSize = 1000;
+constexpr size_t testSize = 1'000;
 
-using std::chrono::duration;
-using std::chrono::duration_cast;
 using std::chrono::high_resolution_clock;
 using std::milli;
 

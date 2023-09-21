@@ -20,7 +20,7 @@ void run_code1()
 
 
 ////////////////////////////// for second example
-void func_2(int& x)
+[[ noreturn ]] void func_2(const int& x)
 {
 	while (true)
 	{

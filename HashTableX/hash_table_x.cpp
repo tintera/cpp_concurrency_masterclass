@@ -1,14 +1,10 @@
 #include "hash_table_x.h"
-#include <assert.h>
-#include <memory.h>
-
-
-#define USE_FAST_SETITEM 0
+#include <cassert>
 
 
 //----------------------------------------------
 // from code.google.com/p/smhasher/wiki/MurmurHash3
-inline static int integerHash(unsigned int h)
+inline static unsigned integerHash(unsigned int h)  // NOLINT(misc-use-anonymous-namespace)
 {
     h ^= h >> 16;
     h *= 0x85ebca6b;
@@ -20,7 +16,7 @@ inline static int integerHash(unsigned int h)
 
 
 //----------------------------------------------
-parallel_hash_table::parallel_hash_table(unsigned int arraySize)
+parallel_hash_table::parallel_hash_table(const int arraySize)
 {
     // Initialize cells
     assert((arraySize & (arraySize - 1)) == 0);   // Must be a power of 2
@@ -37,7 +33,8 @@ parallel_hash_table::~parallel_hash_table()
     delete[] m_entries;
 }
 
-void parallel_hash_table::SetItem(unsigned int key, unsigned int value)
+// ReSharper disable once CppMemberFunctionMayBeConst
+void parallel_hash_table::SetItem(const unsigned int key, const unsigned int value)
 {
     assert(key != 0);
     assert(value != 0);
@@ -59,7 +56,7 @@ void parallel_hash_table::SetItem(unsigned int key, unsigned int value)
 }
 
 //----------------------------------------------
-unsigned int parallel_hash_table::GetItem(unsigned int key)
+unsigned int parallel_hash_table::GetItem(const unsigned int key) const
 {
     assert(key != 0);
 
@@ -68,7 +65,7 @@ unsigned int parallel_hash_table::GetItem(unsigned int key)
         idx &= m_arraySize - 1;
 
         //uint32_t probedKey = mint_load_32_relaxed(&m_entries[idx].key);
-        int probedKey = m_entries[idx].key.load(std::memory_order_relaxed);
+        const unsigned probedKey = m_entries[idx].key.load(std::memory_order_relaxed);
         if (probedKey == key)
             //return mint_load_32_relaxed(&m_entries[idx].value);
             return m_entries[idx].value.load(std::memory_order_relaxed);
@@ -79,10 +76,10 @@ unsigned int parallel_hash_table::GetItem(unsigned int key)
 
 
 //----------------------------------------------
-unsigned int parallel_hash_table::GetItemCount()
+unsigned int parallel_hash_table::GetItemCount() const
 {
     uint32_t itemCount = 0;
-    for (uint32_t idx = 0; idx < m_arraySize; idx++)
+    for (int idx = 0; idx < m_arraySize; idx++)
     {
         if ((m_entries[idx].key.load(std::memory_order_relaxed) != 0)
             && (m_entries[idx].value.load(std::memory_order_relaxed) != 0))
@@ -93,6 +90,7 @@ unsigned int parallel_hash_table::GetItemCount()
 
 
 //----------------------------------------------
+// ReSharper disable once CppMemberFunctionMayBeConst
 void parallel_hash_table::Clear()
 {
     memset(m_entries, 0, sizeof(entry) * m_arraySize);

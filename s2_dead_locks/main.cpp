@@ -6,31 +6,37 @@
 
 /*********************************************** example 1 ***********************************/
 class bank_account {
+
 	double balance;
 	std::string name;
 	std::mutex m;
 
-
 public:
-	bank_account() {};
+	bank_account() = default;
 
-	bank_account(double _balance, std::string _name) :balance(_balance), name(_name) {}
+	bank_account(const double _balance, std::string _name) :balance(_balance), name(std::move(_name)) {}
 
-	bank_account(bank_account& const) = delete;
-	bank_account& operator=(bank_account& const) = delete;
+	bank_account(bank_account& ) = delete;
+	bank_account& operator=(bank_account& ) = delete;
 
-	void withdraw(double amount)
+	bank_account(bank_account&& other) noexcept = delete;
+	bank_account& operator=(bank_account&& other) = delete;
+
+	~bank_account() = default;
+
+	void withdraw(const double amount)
 	{
 		std::lock_guard<std::mutex> lg(m);
 		balance -= amount;
 	}
 
-	void deposite(double amount)
+	void deposit(const double amount)
 	{
 		std::lock_guard<std::mutex> lg(m);
 		balance += amount;
 	}
 
+	// ReSharper disable once CppMemberFunctionMayBeStatic // static function can not be run in a thread
 	void transfer(bank_account& from, bank_account& to, double amount)
 	{
 		std::lock_guard<std::mutex> lg_1(from.m);
@@ -69,7 +75,7 @@ std::mutex m1;
 std::mutex m2;
 
 
-void m1_frist_m2_second()
+void m1_first_m2_second()
 {
 	std::lock_guard<std::mutex> lg1(m1);
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -79,7 +85,7 @@ void m1_frist_m2_second()
 }
 
 
-void m2_frist_m1_second()
+void m2_first_m1_second()
 {
 	std::lock_guard<std::mutex> lg1(m2);
 	std::this_thread::sleep_for(std::chrono::milliseconds(1500));
@@ -90,8 +96,8 @@ void m2_frist_m1_second()
 
 void run_code2()
 {
-	std::thread thread_1(m1_frist_m2_second);
-	std::thread thread_2(m2_frist_m1_second);
+	std::thread thread_1(m1_first_m2_second);
+	std::thread thread_2(m2_first_m1_second);
 
 	thread_1.join();
 	thread_2.join();

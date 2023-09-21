@@ -6,7 +6,7 @@
 
 class barrier_spin {
 
-	unsigned const count;
+	unsigned count;
 	std::atomic<unsigned> spaces;
 	std::atomic<unsigned> generation;
 

@@ -17,7 +17,7 @@ void add_to_list1(int const& x)
 void size1()
 {
 	m.lock();
-	int size = my_list.size();
+	const size_t size = my_list.size();
 	m.unlock();
 	std::cout << "size of the list is : " << size << std::endl;
 }
@@ -32,7 +32,7 @@ void add_to_list2(int const& x)
 void size2()
 {
 	std::lock_guard<std::mutex> lg(m);
-	int size = my_list.size();
+	const size_t size = my_list.size();
 	std::cout << "size of the list is : " << size << std::endl;
 }
 

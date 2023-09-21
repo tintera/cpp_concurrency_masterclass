@@ -11,15 +11,15 @@ int main()
 
 	queueInteger.printData();
 
-	std::cout << "Removing: " << *(queueInteger.pop().get()) << std::endl;
-	std::cout << "Removing: " << *(queueInteger.pop().get()) << std::endl;
-	std::cout << "Removing by wait_pop(): " << *(queueInteger.wait_pop().get()) << std::endl;
+	std::cout << "Removing: " << *(queueInteger.pop()) << std::endl;
+	std::cout << "Removing: " << *(queueInteger.pop()) << std::endl;
+	std::cout << "Removing by wait_pop(): " << *(queueInteger.wait_pop()) << std::endl;
 	queueInteger.printData();
 
-	std::cout << "Removing by wait_pop(): " << *(queueInteger.wait_pop().get()) << std::endl;
+	std::cout << "Removing by wait_pop(): " << *(queueInteger.wait_pop()) << std::endl;
 	queueInteger.printData();
 
-	std::cout << "Removing: " << *(queueInteger.pop().get()) << std::endl;
+	std::cout << "Removing: " << *(queueInteger.pop()) << std::endl;
 	queueInteger.printData();
 
 	return 0;

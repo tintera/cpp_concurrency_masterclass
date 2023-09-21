@@ -2,11 +2,10 @@
 
 #include <thread>
 #include <atomic>
-#include <condition_variable>
 
 class Latch {
 
-	unsigned const count;
+	unsigned const count;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 	std::atomic<unsigned> spaces;
 	std::atomic<unsigned> generation;
 
@@ -24,7 +23,7 @@ public:
 				std::this_thread::yield();
 		}
 		else {
-			generation++;
+			++generation;
 		}
 	}
 };

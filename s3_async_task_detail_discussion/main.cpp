@@ -1,6 +1,5 @@
 #include <iostream>
 #include <future>
-#include <string>
 
 void printing()
 {
@@ -13,9 +12,9 @@ int addition(int x, int y)
 	return x + y;
 }
 
-int substract(int x, int y)
+int subtract(int x, int y)
 {
-	std::cout << "substract runs on-" << std::this_thread::get_id() << std::endl;
+	std::cout << "subtract runs on-" << std::this_thread::get_id() << std::endl;
 	return x - y;
 }
 
@@ -29,10 +28,10 @@ int main()
 	std::future<void> f1 = std::async(std::launch::async, printing);
 	std::future<int> f2 = std::async(std::launch::deferred, addition, x, y);
 	std::future<int> f3 = std::async(std::launch::deferred | std::launch::async,
-		substract, x, y);
+		subtract, x, y);
 
 	f1.get();
-	std::cout << "value recieved using f2 future -" << f2.get() << std::endl;
-	std::cout << "value recieved using f2 future -" << f3.get() << std::endl;
+	std::cout << "value received using f2 future -" << f2.get() << std::endl;
+	std::cout << "value received using f2 future -" << f3.get() << std::endl;
 
 }

@@ -39,27 +39,26 @@ Iterator parallel_find_pt(Iterator first, Iterator last, MatchType match)
 		}
 	};
 
-	unsigned long const length = std::distance(first, last);
+	size_t const length = std::distance(first, last);
 
 	if (!length)
 		return last;
 
 	/*	Calculate the optimized number of threads to run the algorithm	*/
 
-	unsigned long const min_per_thread = 25;
-	unsigned long const max_threads = (length + min_per_thread - 1) / min_per_thread;
+	constexpr unsigned long min_per_thread = 25;
+	size_t const max_threads = (length + min_per_thread - 1) / min_per_thread;
 
-	unsigned long const hardware_threads = std::thread::hardware_concurrency();
-	unsigned long const num_threads = std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);
-	unsigned long const block_size = length / num_threads;
+	size_t const hardware_threads = std::thread::hardware_concurrency();
+	size_t const num_threads = std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);
+	size_t const block_size = length / num_threads;
 
 	/*	Declare the needed data structures	*/
 	std::promise<Iterator> result;
 	std::atomic<bool> done_flag(false);
 
-	std::vector<std::thread> threads(num_threads - 1);
-
 	{
+		std::vector<std::thread> threads(num_threads - 1);
 		join_threads joiner(threads);
 
 		// task dividing loop
@@ -92,7 +91,7 @@ Iterator parallel_find_async(Iterator first, Iterator last, MatchType match, std
 	try
 	{
 		unsigned long const length = std::distance(first, last);
-		unsigned long const min_per_thread = 25;
+		unsigned long constexpr min_per_thread = 25;
 
 		if (length < 2 * min_per_thread)
 		{

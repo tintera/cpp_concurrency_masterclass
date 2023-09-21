@@ -2,7 +2,6 @@
 #include <thread>
 #include <atomic>
 #include <vector>
-#include <iostream>
 #include <future>
 #include <numeric>
 #include <list>
@@ -18,8 +17,7 @@ private:
 	mutable std::mutex the_mutex;
 
 public:
-	work_stealing_queue()
-	{}
+	work_stealing_queue() = default;
 
 	work_stealing_queue(const work_stealing_queue& other) = delete;
 	work_stealing_queue& operator=(const work_stealing_queue& other) = delete;
@@ -76,7 +74,7 @@ class thread_pool_with_work_steal {
 	static thread_local work_stealing_queue* local_work_queue;
 	static thread_local unsigned my_index;
 
-	void worker_thread(unsigned my_index_)
+	void worker_thread(const unsigned my_index_)
 	{
 		my_index = my_index_;
 		local_work_queue = queues[my_index].get();
@@ -86,6 +84,7 @@ class thread_pool_with_work_steal {
 		}
 	}
 
+	// ReSharper disable once CppMemberFunctionMayBeStatic
 	bool pop_task_from_local_queue(task_type& task)
 	{
 		return local_work_queue && local_work_queue->try_pop(task);
@@ -96,6 +95,7 @@ class thread_pool_with_work_steal {
 		return global_work_queue.try_pop(task);
 	}
 
+	// ReSharper disable once CppMemberFunctionMayBeConst
 	bool pop_task_from_other_thread_queue(task_type& task)
 	{
 		for (unsigned i = 0; i < queues.size(); ++i)
@@ -111,7 +111,7 @@ class thread_pool_with_work_steal {
 	}
 
 public:
-	thread_pool_with_work_steal() :joiner(threads), done(false)
+	thread_pool_with_work_steal() : done(false), joiner(threads)
 	{
 		unsigned const thread_count = std::thread::hardware_concurrency();
 
@@ -119,9 +119,9 @@ public:
 		{
 			for (unsigned i = 0; i < thread_count; ++i)
 			{
-				queues.push_back(std::unique_ptr<work_stealing_queue>(new work_stealing_queue));
-				threads.push_back(std::thread(&thread_pool_with_work_steal::worker_thread,
-					this, i));
+				queues.push_back(std::make_unique<work_stealing_queue>());
+				threads.emplace_back(&thread_pool_with_work_steal::worker_thread,
+				                     this, i);
 			}
 		}
 		catch (...)
@@ -137,9 +137,9 @@ public:
 	}
 
 	template<typename FunctionType>
-	std::future<typename std::result_of<FunctionType()>::type> submit(FunctionType f)
+	std::future<std::result_of_t<FunctionType()>> submit(FunctionType f)
 	{
-		typedef typename std::result_of<FunctionType()>::type result_type;
+		typedef std::result_of_t<FunctionType()> result_type;
 
 		std::packaged_task<result_type()> task(std::move(f));
 		std::future<result_type> res(task.get_future());
@@ -189,7 +189,7 @@ struct sorter {
 		result.splice(result.begin(), chunk_data, chunk_data.begin());
 		T const& partition_val = *result.begin();
 
-		typename std::list<T>::iterator divide_point = std::partition(chunk_data.begin(),
+		typename std::list<T>::iterator divide_point = std::partition(chunk_data.begin(),  // NOLINT(modernize-use-auto)
 			chunk_data.end(), [&](T const& val)
 		{
 			return val < partition_val;
@@ -200,7 +200,7 @@ struct sorter {
 			chunk_data.begin(), divide_point);
 
 		std::future<std::list<T>> new_lower =
-			pool.submit(std::bind(&sorter::do_sort, this, std::move(new_lower_chunk)));
+			pool.submit(std::bind(&sorter::do_sort, this, std::move(new_lower_chunk)));  // NOLINT(modernize-avoid-bind) // C++ can not move to lambda
 
 		std::list<T> new_higher(do_sort(chunk_data));
 

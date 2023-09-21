@@ -3,7 +3,7 @@
 
 int find_answer_how_old_universe_is()
 {
-	//this is not the ture value
+	//this is not the true value
 	return 5000;
 }
 

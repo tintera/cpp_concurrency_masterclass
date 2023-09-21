@@ -1,42 +1,48 @@
 #pragma once
-#include <iostream>
-#include <thread>
 #include <algorithm>
+#include <cassert>
+#include <iostream>
+#include <memory>
+#include <thread>
 #include <vector>
 
-#include "utils.h"
-#include "common_objs.h"
+#include "../common/common_objs.h"
 
 class Matrix {
 
-	int* data;
+	std::unique_ptr<int[]> data;
 	int rows; // row count
- 	int columns; // column count
+	int columns; // column count
 
 public:
 
-	Matrix(int _n, int _m) : rows(_n), columns(_m)
+	Matrix(const int _n, const int _m) : rows(_n), columns(_m)
 	{
-		data = new int[ rows * columns ];
+		assert(rows >= 0 && columns >= 0);
+		data = std::make_unique<int[]>(rows * columns);  // NOLINT(bugprone-implicit-widening-of-multiplication-result)
 		//set the array to 0
-		std::fill(data, data + rows*columns, 0);
+		std::fill_n(data.get(), rows*columns, 0);
 	}
 
 	// i -> 0 to n-1
 	// j -> 0 to m-1
-	void set_value(int i, int j, int value)
+	// ReSharper disable once CppMemberFunctionMayBeConst
+	void set_value(const int i, const int j, const int value)
 	{
-		data[i * columns + j] = value;
+		data.get()[i * columns + j] = value;
 	}
 
-	void set_all( int value)
+	// ReSharper disable once CppMemberFunctionMayBeConst
+	void set_all(const int value)
 	{
-		std::fill(data, data + rows * columns, value);
+		std::fill_n(data.get(), rows * columns, value);
 	}
 
-	static void multiply(Matrix* x, Matrix* y, Matrix* results)
+	// ReSharper disable once CppParameterMayBeConstPtrOrRef
+	static void multiply(const Matrix* x, const Matrix* y, Matrix* results)
 	{
 		//check the matrix sizes are correct to multiply
+		// ReSharper disable once CppRedundantComplexityInComparison
 		if (!(x->columns == y->rows) || !((x->rows == results->rows) && (y->columns == results->columns)))
 		{
 			std::cout << " ERROR : Invalid matrix sizes for multiplication \n";
@@ -44,30 +50,31 @@ public:
 		}
 
 		// r = result_size
-		int r = results->rows * results->columns;
+		const int r = results->rows * results->columns;
 
-		for (size_t i = 0; i < r; i++)
+		for (int i = 0; i < r; i++)
 		{
-			for (size_t j = 0; j < x->columns; j++)
+			for (int j = 0; j < x->columns; j++)
 			{
-				results->data[i] += x->data[ (i / results->columns) * x->columns + j ] 
-					* y->data[ i % results->rows + j*y->columns ];
+				results->data.get()[i] += x->data.get()[ (i / results->columns) * x->columns + j ] 
+					* y->data.get()[ i % results->rows + j*y->columns ];
 			}	
 		}
 	}
 
-	static void parallel_multiply(Matrix* x, Matrix* y, Matrix* results)
+	static void parallel_multiply(const Matrix* x, const Matrix* y, Matrix* results)
 	{
 		struct process_data_chunk
 		{
-			void operator()(Matrix* results, Matrix* x, Matrix* y, int start_index, int end_index)
+			// ReSharper disable once CppParameterMayBeConstPtrOrRef
+			void operator()(Matrix* results, const Matrix* x, const Matrix* y, const int start_index, const int end_index) const
 			{
-				for (size_t i = start_index; i < end_index; i++)
+				for (int i = start_index; i < end_index; i++)
 				{
-					for (size_t j = 0; j < x->columns; j++)
+					for (int j = 0; j < x->columns; j++)
 					{
-						results->data[i] += x->data[(i / results->columns) * x->columns + j]
-							* y->data[i % results->rows + j * y->columns];
+						results->data.get()[i] += x->data.get()[(i / results->columns) * x->columns + j]
+							* y->data.get()[i % results->rows + j * y->columns];
 					}
 				}
 			}
@@ -75,30 +82,30 @@ public:
 		};
 		
 		//check the matrix sizes are correct to multiply
-		if (!((x->rows == results->rows) && (y->columns == results->columns)) || !(x->columns == y->rows))
+		if (!((x->rows == results->rows) && (y->columns == results->columns)) || (x->columns != y->rows))
 		{
 			std::cout << " ERROR : Invalid matrix sizes for multiplication \n";
 		}
 
 		// r = result_size
-		int length = results->rows * results->columns;
+		const int length = results->rows * results->columns;
 
 		if (!length)
 			return;
 
-		int min_per_thread = 10000;
-		int max_threads = (length + min_per_thread - 1) / min_per_thread;
-		int hardware_threads = std::thread::hardware_concurrency();
-		int num_threads = std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);
-		int block_size = length / num_threads;
+		constexpr int min_per_thread = 10'000;
+		const int max_threads = (length + min_per_thread - 1) / min_per_thread;
+		const int hardware_threads = static_cast<int>(std::thread::hardware_concurrency());
+		const int num_threads = std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);
+		const int block_size = length / num_threads;
 
-		std::vector<std::thread> threads(num_threads - 1);
-		int block_start = 0;
-		int block_end = 0;
 		{
+			std::vector<std::thread> threads(num_threads - 1);
+			int block_start = 0;
+			int block_end = 0;
 			join_threads joiner(threads);
 
-			for (unsigned long i = 0; i < (num_threads - 1); i++)
+			for (int i = 0; i < (num_threads - 1); i++)
 			{
 				block_start = i * block_size;
 				block_end = block_start + block_size;
@@ -110,7 +117,8 @@ public:
 		}
 	}
 
-	static void transpose(Matrix* x,  Matrix* results)
+	// ReSharper disable once CppParameterMayBeConstPtrOrRef
+	static void transpose(const Matrix* x,  Matrix* results)
 	{
 		//check the matrix sizes are correct to multiply
 		if ( !((x->columns == results->rows) && (x->rows == results->columns)) )
@@ -120,50 +128,39 @@ public:
 		}
 
 		// r = result_size
-		int r = results->rows * results->columns;
+		const int r = results->rows * results->columns;
 
-		int result_column = 0;
-		int result_row = 0;
-
-		int input_column = 0;
-		int input_row = 0;
-
-		for (size_t i = 0; i < r; i++)
+		for (int i = 0; i < r; i++)
 		{
 			//get the current row and column count
-			result_row = i / results->columns;
-			result_column = i % results->columns;
+			const int result_row = i / results->columns;
+			const int result_column = i % results->columns;
 
 			//flipped the columns and row for input
-			input_row = result_column;
-			input_column = result_row;
+			const int input_row = result_column;
+			const int input_column = result_row;
 
 			//store the corresponding element from input to the results
-			results->data[i] = x->data[input_row * x->columns + input_column];
+			results->data.get()[i] = x->data.get()[input_row * x->columns + input_column];
 		}
 	}
 
-	static void parallel_transpose(Matrix* x,  Matrix* results)
+	static void parallel_transpose(const Matrix* x,  Matrix* results)
 	{
 		struct process_data_chunk
 		{
-			void operator()(Matrix* results, Matrix* x, int start_index, int end_index)
+			// ReSharper disable once CppParameterMayBeConstPtrOrRef
+			void operator()(Matrix* results, const Matrix* x, const unsigned start_index, const unsigned end_index) const
 			{
-				int result_column = 0;
-				int result_row = 0;
-
-				int input_column = 0;
-				int input_row = 0;
-
-				for (size_t i = start_index; i < end_index; i++)
+				for (unsigned i = start_index; i < end_index; i++)
 				{
-					result_row = i / results->columns;
-					result_column = i % results->columns;
+					const unsigned result_row = i / results->columns;
+					const unsigned result_column = i % results->columns;
 
-					input_row = result_column;
-					input_column = result_row;
+					const unsigned input_row = result_column;
+					const unsigned input_column = result_row;
 
-					results->data[i] = x->data[input_row * x->columns + input_column];
+					results->data.get()[i] = x->data.get()[input_row * x->columns + input_column];
 				}
 			}
 
@@ -177,21 +174,21 @@ public:
 		}
 
 		// r = result_size
-		int length = results->rows * results->columns;
+		const int length = results->rows * results->columns;
 
 		if (!length)
 			return;
 
-		int min_per_thread = 10000;
-		int max_threads = (length + min_per_thread - 1) / min_per_thread;
-		int hardware_threads = std::thread::hardware_concurrency();
-		int num_threads = std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);
-		int block_size = length / num_threads;
+		constexpr int min_per_thread = 10'000;
+		const unsigned max_threads = (length + min_per_thread - 1) / min_per_thread;
+		const unsigned hardware_threads = std::thread::hardware_concurrency();
+		const unsigned num_threads = std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);
+		const unsigned block_size = length / num_threads;
 
-		std::vector<std::thread> threads(num_threads - 1);
-		int block_start = 0;
-		int block_end = 0;
 		{
+			std::vector<std::thread> threads(num_threads - 1);
+			unsigned block_start = 0;
+			unsigned block_end = 0;
 			join_threads joiner(threads);
 
 			for (unsigned long i = 0; i < (num_threads - 1); i++)
@@ -206,15 +203,15 @@ public:
 		}
 	}
 
-	void print()
+	void print() const
 	{
 		if ( rows < 50 && columns < 50 )
 		{
-			for (size_t i = 0; i < rows; i++)
+			for (int i = 0; i < rows; i++)
 			{
-				for (size_t j = 0; j < columns; j++)
+				for (int j = 0; j < columns; j++)
 				{
-					std::cout << data[j + i * columns] << " ";
+					std::cout << data.get()[j + i * columns] << " ";
 				}
 
 				std::cout << "\n";
@@ -223,8 +220,4 @@ public:
 		}
 	}
 
-	~Matrix()
-	{
-		delete data;
-	}
 };

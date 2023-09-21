@@ -1,25 +1,14 @@
-#include <iostream>
 #include <chrono>
-#include <functional>
-#include <iostream>
-#include <iterator>
-#include <numeric>
-#include <vector>
-#include <execution>
 
-#include "utils.h"
+#include "../common/utils.h"
 #include "matrix.h"
 
-const size_t testSize = 1'000;
-
-using std::chrono::duration;
-using std::chrono::duration_cast;
 using std::chrono::high_resolution_clock;
 using std::milli;
 
 void performance_test_multiply()
 {
-	const int matrix_size = 1000;
+	constexpr int matrix_size = 1000;
 
 	Matrix A(matrix_size, matrix_size);
 	Matrix B(matrix_size, matrix_size);
@@ -53,7 +42,7 @@ void performance_test_transpose()
 	//Matrix::transpose(&A, &B);
 	//B.print();
 
-	const int matrix_size = 10000;
+	constexpr int matrix_size = 10000;
 
 	Matrix A(matrix_size, matrix_size);
 	Matrix B(matrix_size, matrix_size);

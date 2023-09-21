@@ -9,7 +9,7 @@ void func_1()
 
 int main()
 {
-	std::thread thread_1(func_1);
+	const std::thread thread_1(func_1);
 
 	if (thread_1.joinable())
 		std::cout << "this is joinable thread \n";

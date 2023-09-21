@@ -2,7 +2,7 @@
 #include <thread>
 #include <chrono>
 
-void func_2(int& x)
+[[noreturn]] void func_2(const int& x)
 {
 	while (true)
 	{

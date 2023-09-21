@@ -1,4 +1,4 @@
-#pragma once
+#include <iostream>
 
 #include "simple_thread_pool.h"
 
@@ -10,9 +10,11 @@ int main()
 	for (int i = 0; i < 100; i++)
 	{
 		pool.submit([=] {
-			printf(" %d printed by thread - %d \n", i, std::this_thread::get_id());
+#pragma warning(disable: 4477)
+			// ReSharper disable CppPrintfBadFormat
+			printf(" %d printed by thread - %d \n", i, std::this_thread::get_id());  // NOLINT(clang-diagnostic-format)
 		});
 	}
 
-	system("pause");
+	system("pause");  // NOLINT(concurrency-mt-unsafe)
 }

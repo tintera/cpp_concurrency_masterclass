@@ -1,19 +1,18 @@
 #pragma once
 #include <thread>
-#include <atomic>
 #include <future>
 
 //_MSC_VER 
 
 class interrupt_flag
 {
-	bool local_flag;
+	bool local_flag{};
 public:
 	void set()
 	{
 		local_flag = true;
 	}
-	bool is_set()
+	bool is_set() const
 	{
 		return local_flag;
 	}
@@ -22,7 +21,13 @@ public:
 thread_local interrupt_flag this_thread_flag;
 
 class jthread_local {
+public:
+	jthread_local(const jthread_local& other) = delete;
+	jthread_local& operator=(const jthread_local& other) = delete;
+	jthread_local(jthread_local&& other) = default;
+	jthread_local& operator=(jthread_local&& other) = default;
 
+private:
 	std::thread _thread;
 	interrupt_flag* flag;
 
@@ -39,6 +44,7 @@ public:
 	}
 
 
+	// ReSharper disable once CppMemberFunctionMayBeConst
 	void interrupt()
 	{
 		flag->set();
@@ -51,7 +57,7 @@ public:
 	}
 };
 
-bool interrupt_point()
+inline bool interrupt_point()
 {
 	if (this_thread_flag.is_set())
 		return true;

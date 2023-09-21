@@ -1,9 +1,6 @@
 #include <iostream>       
 #include <thread>         
 #include <future>         
-#include <stdexcept>   
-#include <chrono>
-#include <mutex>
 
 /******************************* Example 1 ******************************/
 void print_result1(std::future<int>& fut)
@@ -36,7 +33,7 @@ void run_code1()
 
 /************************************* Example 2 **************************************/
 
-void print_result2(std::shared_future<int>& fut)
+void print_result2(const std::shared_future<int>& fut)
 {
 	std::cout << fut.get() << "  - valid future \n";
 }

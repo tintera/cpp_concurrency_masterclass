@@ -15,7 +15,7 @@ int main()
 {
 	std::thread thread_1(func_1);
 
-	//try to assigne one thread to another
+	//try to assign one thread to another
 	//std::thread thread_2 = thread_1;  
 
 	//move one thread form another
@@ -30,6 +30,6 @@ int main()
 	thread_1 = std::move(thread_3);
 
 	thread_1.join();
-	thread_3.join();
+	thread_3.join();  // NOLINT(bugprone-use-after-move)
 
 }

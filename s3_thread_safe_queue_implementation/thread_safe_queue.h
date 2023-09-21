@@ -1,25 +1,52 @@
 #pragma once
-#include <iostream>
 #include <mutex>
 #include <queue>
 #include <memory>
 #include <condition_variable>
-#include <thread>
 
 template<typename T>
 class thread_safe_queue {
+
 	std::mutex m;
 	std::condition_variable cv;
 	std::queue<std::shared_ptr<T>> queue;
 
 public:
-	thread_safe_queue()
-	{}
+	thread_safe_queue() = default;
+	~thread_safe_queue() = default;
 
 	thread_safe_queue(thread_safe_queue const& other_queue)
 	{
 		std::lock_guard<std::mutex> lg(other_queue.m);
 		queue = other_queue.queue;
+	}
+
+	thread_safe_queue(thread_safe_queue&& other_queue) noexcept
+	{
+		std::lock_guard<std::mutex> lg(other_queue.m);
+		queue = other_queue.queue;
+	}
+
+	thread_safe_queue& operator=(const thread_safe_queue& other_queue)
+	{
+		if (this == &other_queue)
+		{
+			return *this;
+		}
+		std::lock_guard<std::mutex> lg(other_queue.m);
+		queue = other_queue.queue;
+		return *this;
+	}
+
+	thread_safe_queue& operator=(thread_safe_queue&& other_queue) noexcept
+	{
+		if (this == &other_queue)
+		{
+			return *this;
+		}
+		std::lock_guard<std::mutex> lg(other_queue.m);
+		queue = std::move(other_queue.queue);
+		return *this;
 	}
 
 	void push(T& value)

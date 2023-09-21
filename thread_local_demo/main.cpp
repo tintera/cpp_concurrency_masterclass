@@ -3,7 +3,7 @@
 #include <atomic>
 
 
-std::atomic<int> i = 0;
+std::atomic<int> i{ 0 };
 
 void foo() {
     ++i;

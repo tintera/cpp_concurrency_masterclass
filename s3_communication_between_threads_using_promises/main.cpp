@@ -1,8 +1,7 @@
-#include <iostream>       
-#include <functional>     
-#include <thread>        
-#include <future>       
-#include <stdexcept>
+#include <iostream>
+#include <functional>
+#include <thread>
+#include <future>
 
 void print_int(std::future<int>& fut) {
 	std::cout << "waiting for value from print thread \n";

@@ -15,6 +15,6 @@ using std::sort;
 using std::vector;
 
 
-void print_results(const char* const tag, high_resolution_clock::time_point startTime, high_resolution_clock::time_point endTime);
+void print_results(const char* tag, high_resolution_clock::time_point startTime, high_resolution_clock::time_point endTime);
 
 unsigned long get_optimal_num_threads();
